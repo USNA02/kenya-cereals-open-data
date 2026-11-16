@@ -16,7 +16,7 @@ Not a price series. Not a farm survey.
 Figures are from the World Bank World Development Indicators, read
 through Our World in Data grapher files and the DataHub WDI mirror.
 License: CC BY 4.0. Cite the World Bank and Our World in Data.
-Downloaded: not yet.
+Downloaded: 16 November 2026.
 
 ## Findings
 Downloaded 16 November 2026. National cereals, not maize alone.
