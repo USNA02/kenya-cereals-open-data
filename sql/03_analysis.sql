@@ -22,8 +22,8 @@ WHERE country_code = 'KE'
 GROUP BY year
 ORDER BY year;
 
--- 3. East Africa cereal yield in 2024.
--- Kenya is one country in this list, not the average of the list.
+-- 3. Cereal yield in 2024 for the five countries in this dataset.
+-- This is a country comparison, not an East Africa regional average.
 SELECT
   country_code,
   year,
@@ -47,18 +47,25 @@ GROUP BY year
 ORDER BY year;
 
 -- 5. Harvested area should equal production / yield.
--- A small gap is rounding. A large gap means stop.
--- 2024 has no reported area yet, so that column stays empty.
+-- gap_ha = implied area - reported area. A small gap can reflect rounding.
+-- 2024 has no reported cereal area, so reported_area_ha and gap_ha stay NULL.
+WITH area_check AS (
+  SELECT
+    year,
+    MAX(value) FILTER (WHERE indicator_code = 'cereal_production_t') AS production_t,
+    MAX(value) FILTER (WHERE indicator_code = 'cereal_yield_t_ha') AS yield_t_ha,
+    MAX(value) FILTER (WHERE indicator_code = 'cereal_area_ha') AS reported_area_ha
+  FROM kenya.observation
+  WHERE country_code = 'KE'
+    AND year BETWEEN 2018 AND 2024
+  GROUP BY year
+)
 SELECT
   year,
-  MAX(value) FILTER (WHERE indicator_code = 'cereal_production_t') AS production_t,
-  MAX(value) FILTER (WHERE indicator_code = 'cereal_yield_t_ha') AS yield_t_ha,
-  MAX(value) FILTER (WHERE indicator_code = 'cereal_area_ha') AS reported_area_ha,
-  MAX(value) FILTER (WHERE indicator_code = 'cereal_production_t')
-    / NULLIF(MAX(value) FILTER (WHERE indicator_code = 'cereal_yield_t_ha'), 0)
-    AS implied_area_ha
-FROM kenya.observation
-WHERE country_code = 'KE'
-  AND year BETWEEN 2018 AND 2024
-GROUP BY year
+  production_t,
+  yield_t_ha,
+  reported_area_ha,
+  production_t / NULLIF(yield_t_ha, 0) AS implied_area_ha,
+  (production_t / NULLIF(yield_t_ha, 0)) - reported_area_ha AS gap_ha
+FROM area_check
 ORDER BY year;
